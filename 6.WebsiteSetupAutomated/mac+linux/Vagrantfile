@@ -1,0 +1,23 @@
+Vagrant.configure("2") do |config|
+    config.vm.box = "bandit145/centos_stream9_arm"
+     config.vm.network "private_network", ip: "192.168.56.28"
+    config.vm.provider "vmware_desktop" do |vb|
+       vb.gui = true
+       vb.memory = "1024"
+     end
+     config.vm.provision "shell", inline: <<-SHELL
+       yum install httpd wget unzip vim -y
+       systemctl start httpd
+       systemctl enabled httpd
+       mkdir -p /tmp/finance
+       cd /tmp/finance
+       wget 	https://templatemo.com/tm-zip-files-2020/templatemo_518_sentra.zip
+       unzip -o templatemo_518_sentra.zip
+       cp -r 2135_mini_finance/* /var/www/html/
+       systemctl restart httpd
+       cd /tmp/
+       rm -rf /tmp/finance
+       systemctl stop firewalld
+       systemctl disable firewalld
+     SHELL
+  end 
