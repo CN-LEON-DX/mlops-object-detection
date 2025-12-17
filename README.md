@@ -1,4 +1,4 @@
-### YOLO Object detection App with CI/CD
+### YOLO Object detection API with CI/CD
 
 The main workflow is:
 ![main.png](main.png)
@@ -13,7 +13,6 @@ The main workflow is:
 Feature:
 * FastAPI Backend
 * YOLO model: YOLO11 for realtime object detection
-* Frontend 
 * Docker
 * CICD Pipeline: Complete actions workflow
 * Automated Testing: Unit test with pytest

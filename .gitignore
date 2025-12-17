@@ -33,9 +33,9 @@ mlruns/
 /data/valid/images/
 /data/valid/labels/*.txt
 !/data/valid/labels/classes.txt
-/data/test/images/
+/test/images/
 /data/test/labels/*.txt
-!/data/test/labels/classes.txt
+!/test/labels/classes.txt
 *.dvc.lock
 
 classes.txt
