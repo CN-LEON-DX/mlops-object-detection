@@ -7,7 +7,7 @@ ml_models = {}
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     from ml.model_loader import load_production_model
-    ml_models["yolo"] = load_production_model()
+    ml_models["my_yolo11"] = load_production_model()
     yield
     ml_models.clear()
 

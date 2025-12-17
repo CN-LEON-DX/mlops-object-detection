@@ -5,6 +5,22 @@ from app import app
 from ultralytics import YOLO
 from app.app import ml_models
 
+@app.get("/")
+async def root():
+    return {
+        "message": "YOLO Object detection",
+        "status": "running",
+        "model": "YOLO11"
+    }
+
+@app.get("/health")
+async def health_check():
+    return {
+        "status": "healthy",
+        "model_loaded": "my_yolo11" in ml_models
+    }
+
+
 
 @app.get("/predict")
 async def predict(file: UploadFile = File(...)):
