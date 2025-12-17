@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <title>YOLO Web UI (Port 3000)</title>
+  <style>
+    body { font-family: system-ui, Arial, sans-serif; margin: 20px; }
+    .panel { border: 1px solid #ddd; border-radius: 12px; padding: 14px; margin-bottom: 14px; }
+    .grid { display: grid; grid-template-columns: 1.3fr 0.7fr; gap: 14px; align-items: start; }
+    .stage { position: relative; display: inline-block; max-width: 100%; }
+    img { max-width: 100%; height: auto; border-radius: 12px; border: 1px solid #eee; display: block; }
+    canvas { position: absolute; left: 0; top: 0; pointer-events: none; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border-bottom: 1px solid #eee; padding: 8px; text-align: left; font-size: 14px; }
+    th { background: #fafafa; }
+    .hint { color: #666; font-size: 13px; }
+    .badge { padding: 2px 8px; border-radius: 999px; background: #eef6ff; font-size: 12px; }
+    code { background: #f6f6f6; padding: 2px 6px; border-radius: 6px; }
+  </style>
+</head>
+<body>
+  <h2 style="margin:0;">YOLO Web UI <span class="badge">:3000</span></h2>
+  <p class="hint">UI call API <code>{{ api_base }}</code> → return detections → draw.</p>
+
+  <div class="panel">
+    <form action="/predict" method="post" enctype="multipart/form-data">
+      <input type="file" name="file" accept="image/*" required />
+      <button type="submit">Predict</button>
+    </form>
+  </div>
+
+  {% if image_data_url %}
+  <div class="grid">
+    <div class="panel">
+      <div><strong>File:</strong> {{ filename }} — <strong>Count:</strong> {{ count }}</div>
+      <div class="stage" style="margin-top: 10px;">
+        <img id="img" src="{{ image_data_url }}" alt="uploaded" />
+        <canvas id="canvas"></canvas>
+      </div>
+      <p class="hint">Result xyxy from API (based on the original image).</p>
+    </div>
+
+    <div class="panel">
+      <div><strong>Detections</strong></div>
+      <table style="margin-top: 10px;">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Class</th>
+            <th>Conf</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for d in detections %}
+          <tr>
+            <td>{{ loop.index }}</td>
+            <td>{{ d.class_name }}</td>
+            <td>{{ "%.3f"|format(d.confidence or 0) }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <pre id="raw" class="hint" style="white-space: pre-wrap; margin-top: 10px;"></pre>
+    </div>
+  </div>
+
+  <script>
+    const detections = {{ detections | tojson }};
+    document.getElementById("raw").textContent = JSON.stringify(detections, null, 2);
+
+    const img = document.getElementById("img");
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+
+    function draw() {
+      const displayW = img.clientWidth;
+      const displayH = img.clientHeight;
+      const naturalW = img.naturalWidth;
+      const naturalH = img.naturalHeight;
+      if (!naturalW || !naturalH) return;
+
+      canvas.width = displayW;
+      canvas.height = displayH;
+
+      const sx = displayW / naturalW;
+      const sy = displayH / naturalH;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.lineWidth = 2;
+
+      detections.forEach((d) => {
+        const b = d.box_xyxy;
+        if (!b || b.length !== 4) return;
+
+        const x1 = b[0] * sx;
+        const y1 = b[1] * sy;
+        const x2 = b[2] * sx;
+        const y2 = b[3] * sy;
+
+        const w = x2 - x1;
+        const h = y2 - y1;
+
+        ctx.strokeStyle = "#00ff88";
+        ctx.fillStyle = "rgba(0, 255, 136, 0.12)";
+        ctx.strokeRect(x1, y1, w, h);
+        ctx.fillRect(x1, y1, w, h);
+
+        const label = `${d.class_name} ${(d.confidence ?? 0).toFixed(3)}`;
+        ctx.font = "14px system-ui, Arial";
+        const pad = 4;
+        const tw = ctx.measureText(label).width;
+
+        ctx.fillStyle = "rgba(0,0,0,0.65)";
+        ctx.fillRect(x1, Math.max(0, y1 - 20), tw + pad * 2, 20);
+
+        ctx.fillStyle = "#ffffff";
+        ctx.fillText(label, x1 + pad, Math.max(14, y1 - 6));
+      });
+    }
+
+    img.addEventListener("load", draw);
+    window.addEventListener("resize", draw);
+  </script>
+  {% endif %}
+</body>
+</html>

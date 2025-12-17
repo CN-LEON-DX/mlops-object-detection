@@ -1,13 +1,15 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI
+from src.api import router
 
 # docs: https://fastapi.tiangolo.com/advanced/events/#lifespan
-ml_models = {}
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    from ml.model_loader import load_production_model
+    from src.model_loader import load_production_model
+    from src.state import ml_models
     ml_models["my_yolo11"] = load_production_model()
+    print("[OK] load model successfully !")
     yield
     ml_models.clear()
 
@@ -16,3 +18,5 @@ app = FastAPI(
     description="API for object detection with CICD",
     lifespan=lifespan
 )
+
+app.include_router(router)

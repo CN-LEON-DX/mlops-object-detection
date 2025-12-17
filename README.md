@@ -10,6 +10,9 @@ The main workflow is:
 6. Upload to S3
 7. Application rebuild to using the latest model
 
+Dataset (for demo):
+https://public.roboflow.com/object-detection/hard-hat-workers
+
 Feature:
 * FastAPI Backend
 * YOLO model: YOLO11 for realtime object detection
@@ -23,6 +26,10 @@ API Endpoints:
 * GET /health - Health check endpoint
 * GET /model-info - Get model information and available classes
 * POST /predict - Upload image and get object detection results
+
+**Training process:**
+1. if s3_bucket + model exist => download model + fine-tune from it 
+2. Otherwise: fallback to pretrained weight
 
 Project structure:
 ```
@@ -84,4 +91,19 @@ Project structure:
    git add data.dvc .gitignore
    git commit -m "...."
    dvc push
+   ```
+5. **Upload data to S3/ DVC**
+   ```bash
+   dvc add data
+   git add data.dvc .gitignore
+   git commit -m "...."
+   dvc push
+   ```
+6. **Upload first model to test local API **
+   ```bash
+   aws s3 cp yolo11n.pt s3://fuzzyfox145/models/hardhat-detector/production/best.pt
+   ```
+7. **Try api or app with**
+   ```bash
+   aws s3 cp yolo11n.pt s3://fuzzyfox145/models/hardhat-detector/production/best.pt
    ```

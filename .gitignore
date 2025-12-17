@@ -38,3 +38,4 @@ mlruns/
 classes.txt
 README.*.txt
 /data
+/models

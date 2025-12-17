@@ -1,11 +1,11 @@
 from io import BytesIO
-from PIL.Image import Image
-from fastapi import UploadFile, File
-from src import app
+from PIL import Image
+from fastapi import UploadFile, File, APIRouter
 from ultralytics import YOLO
-from src.app import ml_models
+from src.state import ml_models
 
-@app.get("/")
+router = APIRouter()
+@router.get("/")
 async def root():
     return {
         "message": "YOLO Object detection",
@@ -13,20 +13,20 @@ async def root():
         "model": "YOLO11"
     }
 
-@app.get("/health")
+@router.get("/health")
 async def health_check():
     return {
         "status": "healthy",
         "model_loaded": "my_yolo11" in ml_models
     }
 
-@app.get("/predict")
+@router.post("/predict")
 async def predict(file: UploadFile = File(...)):
     img_bytes = await file.read()
     image = Image.open(BytesIO(img_bytes)).convert("RGB")
 
-    model = ml_models["yolo"]
-    result = ml_models["yolo"]
+    model = ml_models["my_yolo11"]
+    result = ml_models["my_yolo11"]
     result = model.predict(image, conf=0.25)
     r0 = result[0]
 
