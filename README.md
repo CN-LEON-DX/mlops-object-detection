@@ -71,3 +71,17 @@ Project structure:
    ```bash
    yolo detect train data=data/data.yaml model=yolo11n.pt epochs=3 imgsz=640
    ```
+4. **Setup dvc for data versioning with S3**
+   ```bash
+   pip install dvc[s3]
+   dvc --version
+   dvc init
+   ```
+   https://doc.dvc.org/user-guide/data-management/remote-storage/amazon-s3
+5. **Upload data to S3/ DVC**
+   ```bash
+   dvc add data
+   git add data.dvc .gitignore
+   git commit -m "...."
+   dvc push
+   ```

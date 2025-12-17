@@ -1,9 +1,9 @@
 from io import BytesIO
 from PIL.Image import Image
 from fastapi import UploadFile, File
-from app import app
+from src import app
 from ultralytics import YOLO
-from app.app import ml_models
+from src.app import ml_models
 
 @app.get("/")
 async def root():
@@ -19,8 +19,6 @@ async def health_check():
         "status": "healthy",
         "model_loaded": "my_yolo11" in ml_models
     }
-
-
 
 @app.get("/predict")
 async def predict(file: UploadFile = File(...)):
