@@ -29,13 +29,10 @@ mlruns/
 # DVC
 /data/train/images/
 /data/train/labels/*.txt
-!/data/train/labels/classes.txt
 /data/valid/images/
 /data/valid/labels/*.txt
-!/data/valid/labels/classes.txt
 /test/images/
 /data/test/labels/*.txt
-!/test/labels/classes.txt
 *.dvc.lock
 
 classes.txt

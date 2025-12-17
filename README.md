@@ -35,9 +35,19 @@ Project structure:
 ├── .github/
 │   └── workflows/
 │       └── ci-cd.yml        # CI/CD pipeline
-├── Dockerfile               # Container configuration
+├── data/                    # store in s3 and manage by DVC
+│   ├── test/                # test
+│       └── images       
+│       └── labels       
+│   └── train/               # train
+│       └── images       
+│       └── labels       
+│   └── valid/               # val 
+│       └── images       
+│       └── labels
+├── Dockerfile               # Container config
 ├── docker-compose.yml       # Local deployment
-├── requirements.txt         # Python dependencies
+├── requirements.txt         # Python dependencies       
 └── README.md
 ```
 
@@ -56,4 +66,8 @@ Project structure:
    conda create -n yolo-fastapi python=3.12.3 -y
    conda activate yolo-fastapi
    pip3 install -r requirements.txt
+   ```
+3. **Test VALID train yolo model**
+   ```bash
+   yolo detect train data=data/data.yaml model=yolo11n.pt epochs=3 imgsz=640
    ```

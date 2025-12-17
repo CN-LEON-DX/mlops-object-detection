@@ -1,26 +1,40 @@
-from contextlib import asynccontextmanager
-from fastapi import FastAPI, File, UploadFile
-
-# docs: https://fastapi.tiangolo.com/advanced/events/#lifespan
-ml_models = {}
-
-
-def fake_answer():
-    return 1 + 1
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-
-    # load ml model
-    ml_models["answer"] = fake_answer
-    yield
-
-    ml_models.clear()
+from io import BytesIO
+from PIL.Image import Image
+from fastapi import UploadFile, File
+from app import app
+from ultralytics import YOLO
+from app.app import ml_models
 
 
+@app.get("/predict")
+async def predict(file: UploadFile = File(...)):
+    img_bytes = await file.read()
+    image = Image.open(BytesIO(img_bytes)).convert("RGB")
 
-app = FastAPI(
-    title="API object detection",
-    description="API for object detection with CICD",
-    lifespan=lifespan
-)
+    model = ml_models["yolo"]
+    result = ml_models["yolo"]
+    result = model.predict(image, conf=0.25)
+    r0 = result[0]
+
+    names = getattr(r0, "names", {})
+    boxes = getattr(r0, "boxes", None)
+
+    detections = []
+    if boxes is not None:
+        for b in boxes:
+            cls_id = int(b.cls.item()) if b.cls is not None else -1
+            conf = float(b.conf.item()) if b.conf is not None else None
+            xyxy = [float(x) for x in b.xyxy[0].tolist()] if b.xyxy is not None else None
+            detections.append(
+                {
+                    "class_id": cls_id,
+                    "class_name": names.get(cls_id, str(cls_id)),
+                    "confidence": conf,
+                    "box_xyxy": xyxy,
+                }
+            )
+    return {
+        "filename": file.filename,
+        "count": len(detections),
+        "detections": detections,
+    }
