@@ -112,3 +112,10 @@ Project structure:
    docker compose build
    docker images
    ```
+10. **Make file dvc.yaml to run dvc repro**
+   ```bash
+   dvc stage add -n train \
+              -d train.py -d data/ \
+              -o models/production.pt \
+              python train.py
+   ```
