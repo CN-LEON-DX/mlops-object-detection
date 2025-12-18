@@ -32,7 +32,6 @@ jobs:
           port: ${{ secrets.TRAINING_SERVER_PORT }}
           envs: AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY
           script: |
-            export PATH="$HOME/miniconda3/bin:$PATH"
             
             echo "== Setup env ==="
             if [ ! -d "mlops_cicd/.git" ]; then
@@ -44,6 +43,13 @@ jobs:
             echo "== Pull lastest code =="
             git fetch --all
             git reset --hard origin/main
+            
+            chmod +x scripts/setup_train_server.sh
+            ./scripts/setup_train_server.sh
+            
+            # activate conda
+            source $HOME/miniconda3/etc/profile.d/conda.sh
+            conda activate mlops-cicd
             
             echo "== Check if data.dvc changed =="
             # git diff HEAD~1 HEAD to check if it has diff between two commits

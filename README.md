@@ -13,6 +13,9 @@ The main workflow is:
 Dataset (for demo):
 https://public.roboflow.com/object-detection/hard-hat-workers
 
+Cheatsheet for project:
+https://docs.google.com/spreadsheets/d/1bp_MjKf38roPeomH-sP3d0OW55_H3gQVMwpSSVIQzOE/edit?usp=sharing
+
 Feature:
 * FastAPI Backend
 * YOLO model: YOLO11 for realtime object detection
@@ -68,7 +71,7 @@ Project structure:
 ```
 
 #### Prerequisite
-* Python 3.12.3+ (I'm using)
+* Python 3.11 (I'm using)
 * Docker & Docker compose
 
 #### Setup
