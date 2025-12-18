@@ -1,0 +1,9 @@
+# which step we're using for train ;( and dvc repro
+stages:
+  train:
+    cmd: python train.py
+    deps:
+    - data/
+    - train.py
+    outs:
+    - models/production.pt

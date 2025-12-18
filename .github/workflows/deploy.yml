@@ -1,0 +1,164 @@
+name: CI/CD for model training
+
+on:
+  push:
+    path:
+      - "data/**" #data change
+      - "data.dvc" #dvc track
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+jobs:
+  train_on_server:
+    name: Train on gpu server
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: ssh run + training
+        uses: appleboy/ssh-action@v1.1.0
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        with:
+          host: ${{ secrets.TRAINING_SERVER_HOST }}
+          username: ${{ secrets.TRAINING_SERVER_USER }}
+          key: ${{ secrets.TRAINING_SERVER_KEY }}
+          port: ${{ secrets.TRAINING_SERVER_PORT }}
+          envs: AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY
+          script: |
+            echo "== Setup env ==="
+            mkdir mlops_cicd
+            
+            echo "== Pull lastest code =="
+            git pull
+            
+            echo "== Check if data.dvc changed =="
+            # git diff HEAD~1 HEAD to check if it has diff between two commits
+            # list file hass diff then -> find the file has name "data.dvc" ->  only return 0 (success exec) or 1
+            # -> -q for quite return if it have -> 0 -> true , 1 false
+            
+            DATA_CHANGED=$(git diff HEAD~1 HEAD --name-only | grep -q "data.dvc" && echo "true" || echo "false")
+            echo "Data changed: $DATA_CHANGED"
+            
+            echo "== init conda =="
+            source ~/miniconda3/bin/activate
+            conda activate mlops-cicd
+            
+            echo "== pull latest DVC data =="
+            dvc pull
+            
+            echo "== Run DVC pipline"
+            if [ "$DATA_CHANGED" = "true" ]; then
+              echo "data changed detected -> training"
+              dvc repro --force
+            else
+              echo "no data changes - running pipeline"
+              dvc repro
+            fi
+            
+            echo "== push artifact back to DVC remote =="
+            dvc push
+            
+            # dvc repro in data.yml auto check for us if model created ;) -> auto track without 
+            # manually add "dvc add"
+  build_and_push:
+    name: build docker image and push ghcr
+    needs: train_on_server
+    runs-on: ubuntu-latest
+    # why we have this output here
+    # find the step id == image and get value -> return it as outputs for another job can use it :<
+    outputs:
+      image_name: ${{ steps.image.outputs.value }}
+
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v4
+      - name: set lowercase image name
+        id: image
+        run: |
+          IMAGE_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          echo "IMAGE_NAME_LOWER=${IMAGE_LOWER}" >> $GITHUB_ENV
+          echo "value=${IMAGE_LOWER}" >> $GITHUB_OUTPUT
+
+      # for caching and fast build ;<
+      # don't need to download multiple time dependencies and parallel processing cmd
+      - name: setup docker buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: login to ghcr
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: generate tag metadata
+        id: tag
+        run: |
+          MODEL_VERSION=$(date + %Y%m%d-%H%M%S)
+          TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+          echo "model_version=$MODEL_VERSION" >> $GITHUB_OUTPUT
+          echo "timestamp=$TIMESTAMP" >> $GITHUB_OUTPUT
+
+      - name: docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_LOWER }}
+          tags: |
+            type=raw,value=latest
+            type=raw,value=model-${{ steps.tag.outputs.model_version }}
+            type=raw,value=deploy-${{ steps.tag.outputs.timestamp }}
+            type=sha,prefix=sha-
+
+      - name: build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            MODEL_VERSION=${{ steps.tag.outputs.model_version }}
+          cache-from: type=gha
+          cache-to: type=gha, mode=max
+
+  deploy_to_ec2:
+    name: deploy to ec2
+    needs: build_and_push
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: ssh deploy container on ec2
+        uses: appleboy/ssh-action@v1.1.0
+        env:
+          IMAGE_NAME: ${{ needs.build_and_push.outputs.image_name }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_ACTOR: ${{ github.actor }}
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_KEY }}
+          port: ${{ secrets.EC2_PORT }}
+          envs: IMAGE_NAME,GITHUB_TOKEN,GITHUB_ACTOR
+          script: |
+            echo "logging to githuv container registry"
+            echo ${GITHUB_TOKEN} | docker login ghcr.io -u ${GITHUB_ACTOR} --password-stdin
+            echo "pulling latest image"
+            docker pull ghcr.io/${IMAGE_NAME}:latest
+            
+            echo "stopping and removing old container"
+            docker stop app-container || true
+            docker rm app-container || true
+            
+            echo "starting new container"
+            docker run -d --name app-container -p 8000:8000 \
+              --restart unless-stopped \
+              -e AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }} \
+              -e AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} \
+              -e S3_BUCKET=${{ secrets.S3_BUCKET }} \
+              ghcr.io/${IMAGE_NAME}:latest
+            
+            echo "Cleaning up old images"
+            docker image prune -f
+          
