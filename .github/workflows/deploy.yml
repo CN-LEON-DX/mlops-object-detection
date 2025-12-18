@@ -69,6 +69,26 @@ jobs:
             source $HOME/miniconda3/etc/profile.d/conda.sh
             conda activate mlops-cicd || { echo "Conda env not found"; exit 1; }
             
+            echo "== setup  mlflow  =="
+            MLFLOW_DIR="$HOME/mlflow_data"
+            mkdir -p $MLFLOW_DIR
+            
+            # Check if mlflow server is running
+            if ! pgrep -f "mlflow server" > /dev/null; then
+                echo "Starting mlflow server..."
+                nohup mlflow server \
+                    --backend-store-uri sqlite:///${MLFLOW_DIR}/mlflow.db \
+                    --default-artifact-root ${MLFLOW_DIR}/mlruns \
+                    --host 0.0.0.0 \
+                    --port 5001 > ${MLFLOW_DIR}/mlflow.log 2>&1 &
+                sleep 5
+            else
+                echo "mlflow server is already running."
+            fi
+            
+            export MLFLOW_TRACKING_URI=http://localhost:5001
+            echo "mlflow URI set to: $MLFLOW_TRACKING_URI"
+            
             echo "== dbg: Check env =="
             pip list
             python -c "import torch; print(torch.__version__)" || echo "Torch not found in deploy step"

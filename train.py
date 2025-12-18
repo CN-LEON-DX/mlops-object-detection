@@ -73,7 +73,8 @@ def train_yolo(
         run_name = f"{model_name}-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
 
 
-    mlflow_uri = os.getenv("MLFLOW_TRACKING_URI", "http://localhost:5001")
+    # Default to local mlruns if not specified, to avoid connection errors
+    mlflow_uri = os.getenv("MLFLOW_TRACKING_URI", "file:./mlruns")
     os.environ["MLFLOW_TRACKING_URI"] = mlflow_uri
     if experiment_name:
         os.environ["MLFLOW_EXPERIMENT_NAME"] = experiment_name
@@ -224,8 +225,8 @@ def register_model_to_mlflow(
     """
     logger.info("Registering model to MLflow...")
 
-    # Set MLflow tracking URI and experimentgi
-    mlflow_uri = os.getenv("MLFLOW_TRACKING_URI", "http://localhost:5001")
+    # Set MLflow tracking URI and experiment
+    mlflow_uri = os.getenv("MLFLOW_TRACKING_URI", "file:./mlruns")
     mlflow.set_tracking_uri(mlflow_uri)
     mlflow.set_experiment(experiment_name)
 
