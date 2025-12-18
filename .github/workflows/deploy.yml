@@ -2,9 +2,12 @@ name: CI/CD for model training
 
 on:
   push:
-    path:
+    branches:
+      - main
+    paths:
       - "data/**" #data change
       - "data.dvc" #dvc track
+  workflow_dispatch:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
