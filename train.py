@@ -17,13 +17,10 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Get the project root directory
 PROJECT_ROOT = Path(__file__).parent.absolute()
 DATA_DIR = PROJECT_ROOT / "data"
 MODELS_DIR = PROJECT_ROOT / "checkpoints"
 RUNS_DIR = PROJECT_ROOT / "runs"
-
-# Create directories if they don't exist
 MODELS_DIR.mkdir(exist_ok=True)
 RUNS_DIR.mkdir(exist_ok=True)
 
@@ -44,7 +41,6 @@ def train_yolo(
     logger.info("YOLO Training Script")
     logger.info("=" * 50)
 
-    # Validate data.yaml exists
     data_path = PROJECT_ROOT / data_yaml
     if not data_path.exists():
         raise FileNotFoundError(f"Data configuration file not found: {data_path}")
@@ -89,17 +85,13 @@ def train_yolo(
     logger.info(f"MLflow run name: {run_name}")
 
     try:
-        # Check ultralytics version
         import ultralytics
         ul_version = ultralytics.__version__
         logger.info(f"Ultralytics version: {ul_version}")
-
-        # Initialize YOLO model
         logger.info(f"Loading {model_name} model...")
         logger.info("Note: If this is the first time, the model will be downloaded automatically...")
         model_path = MODELS_DIR / f"{model_name}.pt"
         model = YOLO(model_path)
-
         # Train the model
         logger.info("Starting training...")
         results = model.train(
@@ -118,7 +110,6 @@ def train_yolo(
         )
 
         logger.info("Training completed successfully!")
-
         # Save the best model
         best_model_path = MODELS_DIR / f"{model_name}-best-{run_name}.pt"
         model.save(str(best_model_path))
@@ -145,20 +136,17 @@ def validate_model(
 ) -> Dict[str, Any]:
     """
     Validate a trained model on a specific dataset split.
-
     Args:
         model_path: Path to the trained model
         data_yaml: Path to data.yaml configuration file
         imgsz: Input image size
         device: GPU device ID, 'mps', 'cpu', or None for auto-select
         split: Dataset split to validate on ('val' or 'test')
-
     Returns:
         Dictionary with validation metrics
     """
 
     logger.info(f"Validating model on {split} set: {model_path}")
-
     # Load model
     model = YOLO(model_path)
 
@@ -169,7 +157,6 @@ def validate_model(
         device=device,
         split=split
     )
-
     # Extract key metrics
     metrics = {
         "precision": float(results.box.p.mean()) if hasattr(results.box, 'p') else 0.0,
@@ -262,14 +249,12 @@ def register_model_to_mlflow(
 
     # Update existing run or create new one if not found
     if run_id:
-        # Update existing run with test metrics and model artifact
         client.log_metric(run_id, "test_precision", test_metrics["precision"])
         client.log_metric(run_id, "test_recall", test_metrics["recall"])
         client.log_metric(run_id, "test_mAP50", test_metrics["mAP50"])
         client.log_metric(run_id, "test_mAP50-95", test_metrics["mAP50-95"])
         client.log_artifact(run_id, model_path, artifact_path="model")
     else:
-        # Fallback: create a new run if training run not found
         logger.warning(f"Training run '{run_name}' not found, creating new run")
         with mlflow.start_run(run_name=run_name) as run:
             mlflow.log_metrics({
@@ -288,8 +273,7 @@ def register_model_to_mlflow(
     try:
         client.create_registered_model(model_name)
     except Exception:
-        pass  # Model already exists
-
+        pass
     result = client.create_model_version(
         name=model_name,
         source=artifact_uri,
@@ -312,7 +296,7 @@ def register_model_to_mlflow(
                 should_promote = False
                 logger.info(f"Production model has better mAP: {prod_map:.4f} >= {current_map:.4f}")
     except Exception:
-        pass  # No production model exists yet
+        pass
 
     # Set production alias if best model
     if should_promote:
