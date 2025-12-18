@@ -23,10 +23,10 @@ conda activate mlops-cicd
 python -m pip install -q --upgrade pip
 python -m pip install -q dvc[s3] torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
 python -m pip install -q -r requirements.txt
-
 python -m pip uninstall -y -q opencv-python || true
-python -m pip install -q opencv-python-headless
+python -m pip install -q opencv-python-headless --force-reinstall
 
 python -c "import torch; print(f'Torch version: {torch.__version__}')"
+python -c "import cv2; print(f'OpenCV version: {cv2.__version__}')"
 
 echo "setup server env successfully!"
