@@ -92,18 +92,23 @@ Project structure:
    git commit -m "...."
    dvc push
    ```
-5. **Upload data to S3/ DVC**
+6. **Upload data to S3/ DVC**
    ```bash
    dvc add data
    git add data.dvc .gitignore
    git commit -m "...."
    dvc push
    ```
-6. **Upload first model to test local API **
+7. **Upload first model to test local API**
    ```bash
-   aws s3 cp yolo11n.pt s3://fuzzyfox145/models/hardhat-detector/production/best.pt
+   aws s3 cp yolo11n.pt s3:// your_bucket_name /models/hardhat-detector/production/best.pt
    ```
-7. **Try api or app with**
+8. **Try api or app with**
    ```bash
-   aws s3 cp yolo11n.pt s3://fuzzyfox145/models/hardhat-detector/production/best.pt
+   aws s3 cp yolo11n.pt s3:// your_bucket_name /models/hardhat-detector/production/best.pt
+   ```
+9. **Try api or app with**
+   ```bash
+   docker compose build
+   docker images
    ```
