@@ -32,7 +32,7 @@ jobs:
           port: ${{ secrets.TRAINING_SERVER_PORT }}
           envs: AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY
           script: |
-            
+            export PATH="$HOME/miniconda3/bin:$PATH"
             echo "== Setup env ==="
             if [ ! -d "mlops_cicd/.git" ]; then
               echo "Repo not found, cloning..."
@@ -65,8 +65,6 @@ jobs:
             
             echo "== init conda =="
             source $HOME/miniconda3/etc/profile.d/conda.sh
-            conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/main
-            conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r
             conda activate mlops-cicd || { echo "Conda env not found"; exit 1; }
             
             echo "== pull latest DVC data =="

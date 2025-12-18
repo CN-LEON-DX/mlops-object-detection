@@ -10,6 +10,8 @@ else
 fi
 
 source "$HOME/miniconda3/etc/profile.d/conda.sh"
+conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/main
+conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r
 
 if { conda env list | grep 'mlops-cicd'; } >/dev/null 2>&1; then
     echo "Env mlops-cicd already exists.Updating dep..."
