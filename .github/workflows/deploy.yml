@@ -9,6 +9,7 @@ on:
       - "dvc.yaml"
       - "train.py"
       - "src/**"
+      - "scripts/**"
       - ".github/workflows/**"
   workflow_dispatch:
 env:
