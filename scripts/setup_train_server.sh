@@ -23,5 +23,6 @@ fi
 conda activate mlops-cicd
 python -m pip install --upgrade pip
 python -m pip install dvc[s3]
+python -m pip install -r requirements.txt
 
 echo "setup server env successfully!"
