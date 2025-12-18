@@ -65,6 +65,8 @@ jobs:
             
             echo "== init conda =="
             source $HOME/miniconda3/etc/profile.d/conda.sh
+            conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/main
+            conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r
             conda activate mlops-cicd || { echo "Conda env not found"; exit 1; }
             
             echo "== pull latest DVC data =="
