@@ -13,7 +13,7 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 jobs:
   train_on_server:
-    name: Train on gpu server
+    name: Train on server
     runs-on: ubuntu-latest
 
     steps:

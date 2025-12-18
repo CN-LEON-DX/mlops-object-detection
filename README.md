@@ -33,9 +33,15 @@ API Endpoints:
 
 Project structure:
 ```
+├── .github/
+│   ├── workflows/
+│       └── deploy.yml       # cicd pipeline
 ├── app/
 │   ├── __init__.py
 │   └── main.py              # FastAPI application
+├── mlflow/
+│   ├── docker-compose.yml   # mlflow setup
+│   ├── Dockerfile           # config for mlflow
 ├── tests/
 │   ├── __init__.py
 │   └── test_main.py         # Unit tests
@@ -52,6 +58,9 @@ Project structure:
 │   └── valid/               # val 
 │       └── images       
 │       └── labels
+├── dvc.yaml         # Python dependencies       
+├── main.py         # Python dependencies       
+├── train.py         # Python dependencies    
 ├── Dockerfile               # Container config
 ├── docker-compose.yml       # Local deployment
 ├── requirements.txt         # Python dependencies       
