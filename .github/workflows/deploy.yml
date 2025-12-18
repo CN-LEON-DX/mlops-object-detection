@@ -32,6 +32,7 @@ jobs:
           port: ${{ secrets.TRAINING_SERVER_PORT }}
           envs: AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY
           script: |
+            set -e
             export PATH="$HOME/miniconda3/bin:$PATH"
             echo "== Setup env ==="
             if [ ! -d "mlops_cicd/.git" ]; then
@@ -67,8 +68,12 @@ jobs:
             source $HOME/miniconda3/etc/profile.d/conda.sh
             conda activate mlops-cicd || { echo "Conda env not found"; exit 1; }
             
+            echo "== dbg: Check env =="
+            pip list
+            python -c "import torch; print(torch.__version__)" || echo "Torch not found in deploy step"
+            
             echo "== pull latest DVC data =="
-            dvc pull
+            dvc pull || echo "DVC pull failed, skipping..."
             
             echo "== Run DVC pipline"
             if [ "$DATA_CHANGED" = "true" ]; then

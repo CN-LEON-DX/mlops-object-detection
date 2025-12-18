@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 if [ ! -d "$HOME/miniconda3" ]; then
     echo "Installing Miniconda..."
@@ -10,8 +11,6 @@ else
 fi
 
 source "$HOME/miniconda3/etc/profile.d/conda.sh"
-conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/main
-conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r
 
 if { conda env list | grep 'mlops-cicd'; } >/dev/null 2>&1; then
     echo "Env mlops-cicd already exists.Updating dep..."
@@ -22,7 +21,9 @@ fi
 
 conda activate mlops-cicd
 python -m pip install --upgrade pip
-python -m pip install dvc[s3]
+python -m pip install dvc[s3] torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
 python -m pip install -r requirements.txt
+
+python -c "import torch; print(f'Torch version: {torch.__version__}')"
 
 echo "setup server env successfully!"
