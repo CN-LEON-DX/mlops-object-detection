@@ -32,24 +32,34 @@ jobs:
           port: ${{ secrets.TRAINING_SERVER_PORT }}
           envs: AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY
           script: |
+            export PATH="$HOME/miniconda3/bin:$PATH"
+            
             echo "== Setup env ==="
-            mkdir -p mlops_cicd
+            if [ ! -d "mlops_cicd/.git" ]; then
+              echo "Repo not found, cloning..."
+              git clone https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git mlops_cicd
+            fi
             cd mlops_cicd
             
             echo "== Pull lastest code =="
-            git pull
+            git fetch --all
+            git reset --hard origin/main
             
             echo "== Check if data.dvc changed =="
             # git diff HEAD~1 HEAD to check if it has diff between two commits
             # list file hass diff then -> find the file has name "data.dvc" ->  only return 0 (success exec) or 1
             # -> -q for quite return if it have -> 0 -> true , 1 false
             
-            DATA_CHANGED=$(git diff HEAD~1 HEAD --name-only | grep -q "data.dvc" && echo "true" || echo "false")
+            if git rev-parse HEAD~1 >/dev/null 2>&1; then
+              DATA_CHANGED=$(git diff HEAD~1 HEAD --name-only | grep -q "data.dvc" && echo "true" || echo "false")
+            else
+              DATA_CHANGED="true"
+            fi
             echo "Data changed: $DATA_CHANGED"
             
             echo "== init conda =="
-            source ~/miniconda3/bin/activate
-            conda activate mlops-cicd
+            source $HOME/miniconda3/etc/profile.d/conda.sh
+            conda activate mlops-cicd || { echo "Conda env not found"; exit 1; }
             
             echo "== pull latest DVC data =="
             dvc pull
