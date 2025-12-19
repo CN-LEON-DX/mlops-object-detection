@@ -131,3 +131,11 @@ Project structure:
               -o models/production.pt \
               python train.py
    ```
+
+#### Demo
+**Mlflow with versioning:**
+![mlflow.png](demo/mlflow_versioning.png)
+**Swager:**
+![swagger.png](demo/swagger.png)
+**Test api predict**
+![test_api.png](demo/test_api.png)
