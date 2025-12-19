@@ -1,0 +1,14 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install Flask and requests
+RUN pip install --no-cache-dir flask requests
+
+# Copy source code
+COPY src/ui.py src/ui.py
+COPY templates templates/
+
+EXPOSE 3000
+
+CMD ["python", "src/ui.py"]

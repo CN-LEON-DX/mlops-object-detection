@@ -166,6 +166,16 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha, mode=max
 
+      - name: build and push ui image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.ui
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_LOWER }}-ui:latest
+          cache-from: type=gha
+          cache-to: type=gha, mode=max
+
   deploy_to_ec2:
     name: deploy to ec2
     needs: build_and_push
@@ -187,15 +197,24 @@ jobs:
           script: |
             echo "logging to githuv container registry"
             echo ${GITHUB_TOKEN} | docker login ghcr.io -u ${GITHUB_ACTOR} --password-stdin
-            echo "pulling latest image"
-            docker pull ghcr.io/${IMAGE_NAME}:latest
             
-            echo "stopping and removing old container"
+            echo "pulling latest images"
+            docker pull ghcr.io/${IMAGE_NAME}:latest
+            docker pull ghcr.io/${IMAGE_NAME}-ui:latest
+            
+            echo "stopping and removing old containers"
+            docker stop ui-container || true
+            docker rm ui-container || true
             docker stop app-container || true
             docker rm app-container || true
             
-            echo "starting new container"
-            docker run -d --name app-container -p 8000:8000 \
+            echo "creating network if not exists"
+            docker network create mlops-net || true
+            
+            echo "starting backend container"
+            docker run -d --name app-container \
+              --network mlops-net \
+              -p 8000:8000 \
               --restart unless-stopped \
               -e AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }} \
               -e AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} \
@@ -203,6 +222,14 @@ jobs:
               -e S3_MODEL_KEY="models/hardhat-detector/production/best.pt" \
               -e MODEL_PATH="models/production.pt" \
               ghcr.io/${IMAGE_NAME}:latest
+            
+            echo "starting ui container"
+            docker run -d --name ui-container \
+              --network mlops-net \
+              -p 3000:3000 \
+              --restart unless-stopped \
+              -e API_URL="http://app-container:8000" \
+              ghcr.io/${IMAGE_NAME}-ui:latest
             
             echo "Cleaning up old images"
             docker image prune -f
