@@ -450,8 +450,24 @@ if __name__ == "__main__":
         logger.info(f"Model URI: {registration_result['model_uri']}")
         if registration_result['promoted']:
             logger.info(f"Model promoted to production (version {registration_result['version']})")
+            
+            # Update local production model for DVC
+            production_path = MODELS_DIR / "production.pt"
+            import shutil
+            shutil.copy(model_path, production_path)
+            logger.info(f"Updated local production model: {production_path}")
+            
         else:
             logger.info(f"Model registered but not promoted (version {registration_result['version']})")
+            
+            # Ensure production.pt exists for DVC (initialize if missing)
+            production_path = MODELS_DIR / "production.pt"
+            if not production_path.exists():
+                import shutil
+                shutil.copy(model_path, production_path)
+                logger.info(f"Initialized local production model (first run): {production_path}")
+            else:
+                logger.info("Keeping existing production model.")
         logger.info("=" * 50)
 
     except Exception as e:
