@@ -28,7 +28,7 @@ RUNS_DIR.mkdir(exist_ok=True)
 def train_yolo(
         data_yaml: str = "data/data.yaml",
         model_name: str = "yolo11n",
-        epochs: int = 100,
+        epochs: int = 2,
         imgsz: int = 640,
         batch_size: int = 16,
         patience: int = 20,
@@ -339,7 +339,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--epochs",
         type=int,
-        default=10,
+        default=2,
         help="Number of training epochs"
     )
     parser.add_argument(
