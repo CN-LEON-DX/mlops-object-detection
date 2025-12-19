@@ -32,7 +32,8 @@ jobs:
           username: ${{ secrets.TRAINING_SERVER_USER }}
           key: ${{ secrets.TRAINING_SERVER_KEY }}
           port: ${{ secrets.TRAINING_SERVER_PORT }}
-          envs: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, S3_BUCKET
+          command_timeout: 30m
+          envs: AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY,S3_BUCKET
           script: |
             set -e
             export PATH="$HOME/miniconda3/bin:$PATH"

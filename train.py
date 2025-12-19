@@ -28,8 +28,8 @@ RUNS_DIR.mkdir(exist_ok=True)
 def train_yolo(
         data_yaml: str = "data/data.yaml",
         model_name: str = "yolo11n",
-        epochs: int = 2,
-        imgsz: int = 640,
+        epochs: int = 1,
+        imgsz: int = 320,
         batch_size: int = 16,
         patience: int = 20,
         device: Optional[Union[int, str]] = None,
@@ -339,7 +339,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--epochs",
         type=int,
-        default=2,
+        default=1,
         help="Number of training epochs"
     )
     parser.add_argument(
@@ -351,7 +351,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--imgsz",
         type=int,
-        default=640,
+        default=320,
         help="Input image size"
     )
     parser.add_argument(
