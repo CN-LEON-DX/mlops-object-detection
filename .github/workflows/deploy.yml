@@ -73,32 +73,6 @@ jobs:
             MLFLOW_DIR="$HOME/mlflow_data"
             mkdir -p $MLFLOW_DIR
             
-            # Kill existing mlflow process to ensure clean state
-            pkill -f "mlflow server" || true
-            sleep 2
-            
-            echo "Starting mlflow server..."
-            nohup mlflow server \
-                --backend-store-uri sqlite:///${MLFLOW_DIR}/mlflow.db \
-                --default-artifact-root ${MLFLOW_DIR}/mlruns \
-                --host 0.0.0.0 \
-                --port 5001 > ${MLFLOW_DIR}/mlflow.log 2>&1 &
-            
-            # Wait for server to be ready
-            echo "Waiting for MLflow server to start..."
-            timeout=30
-            while ! python -c "import socket; s=socket.socket(); s.connect(('localhost', 5001))" 2>/dev/null; do
-                if [ $timeout -le 0 ]; then
-                    echo "Timed out waiting for MLflow server"
-                    cat ${MLFLOW_DIR}/mlflow.log
-                    exit 1
-                fi
-                echo "Waiting..."
-                sleep 1
-                ((timeout--))
-            done
-            echo "MLflow server is up!"
-            
             export MLFLOW_TRACKING_URI=http://localhost:5001
             echo "mlflow URI set to: $MLFLOW_TRACKING_URI"
             
