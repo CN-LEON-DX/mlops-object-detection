@@ -24,6 +24,9 @@ jobs:
   train_on_server:
     name: Train on server
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
 
     steps:
       - name: ssh run + training
