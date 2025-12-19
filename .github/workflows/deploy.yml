@@ -87,7 +87,7 @@ jobs:
             python -c "import torch; print(torch.__version__)" || echo "Torch not found in deploy step"
             
             echo "== pull latest DVC data =="
-            dvc pull || echo "DVC pull failed, skipping..."
+            dvc pull
             rm -f .dvc/tmp/rwlock
             
             echo "== Run DVC pipline"
