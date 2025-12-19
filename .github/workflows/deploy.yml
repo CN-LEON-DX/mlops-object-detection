@@ -134,7 +134,7 @@ jobs:
       - name: generate tag metadata
         id: tag
         run: |
-          MODEL_VERSION=$(date + %Y%m%d-%H%M%S)
+          MODEL_VERSION=$(date +%Y%m%d-%H%M%S)
           TIMESTAMP=$(date +%Y%m%d-%H%M%S)
           echo "model_version=$MODEL_VERSION" >> $GITHUB_OUTPUT
           echo "timestamp=$TIMESTAMP" >> $GITHUB_OUTPUT
