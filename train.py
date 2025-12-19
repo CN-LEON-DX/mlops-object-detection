@@ -452,7 +452,9 @@ if __name__ == "__main__":
             logger.info(f"Model promoted to production (version {registration_result['version']})")
             
             # Update local production model for DVC
-            production_path = MODELS_DIR / "production.pt"
+            production_dir = PROJECT_ROOT / "models"
+            production_dir.mkdir(exist_ok=True)
+            production_path = production_dir / "production.pt"
             import shutil
             shutil.copy(model_path, production_path)
             logger.info(f"Updated local production model: {production_path}")
@@ -461,7 +463,10 @@ if __name__ == "__main__":
             logger.info(f"Model registered but not promoted (version {registration_result['version']})")
             
             # Ensure production.pt exists for DVC (initialize if missing)
-            production_path = MODELS_DIR / "production.pt"
+            production_dir = PROJECT_ROOT / "models"
+            production_dir.mkdir(exist_ok=True)
+            production_path = production_dir / "production.pt"
+            
             if not production_path.exists():
                 import shutil
                 shutil.copy(model_path, production_path)
